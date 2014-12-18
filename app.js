@@ -6,6 +6,15 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+	//for submit button number2
+	$('.inspiration-getter').submit( function(event){
+		//alert('hit submit');
+		// zero out results if previous search has run
+		$('.results1').html('');
+		// get the value of the tags the user submitted
+		var tags1 = $(this).find("input[name='answerers']").val();
+		getInspired(tags1);
+	});
 });
 
 // this function takes the question object returned by StackOverflow 
@@ -40,13 +49,48 @@ var showQuestion = function(question) {
 
 	return result;
 };
+// showAnswerers for the second submit button for inspiration
+var showAnswerers = function(answer) {
 
+
+	
+	// clone our result1 template code
+	var result1 = $('.templates .answer').clone();
+	
+	//set answer details link in result1
+	var answerElem = result1.find('.answer-text a');
+	answerElem.attr('href', answer.user.link);
+	answerElem.text(answer.user.display_name);
+
+	// Set the answer properties in result1
+	var postCountElem = result1.find('.postCount');
+	postCountElem.text(answer.post_count);
+
+	// set the score property in result1
+	var score = result1.find('.score');
+	score.text(answer.score);
+
+	// set some properties related to asker
+	var user = result1.find('.user');
+	user.html('<p>Name: <a target="_blank" href=http://stackoverflow.com/users/' + answer.user.user_id + ' >' +
+													answer.user.display_name +
+												'</a>' +
+							'</p>' +
+ 							'<p>Reputation: ' + answer.user.reputation + '</p>'
+	);
+
+	return result1;
+};
 
 // this function takes the results object from StackOverflow
 // and creates info about search results to be appended to DOM
 var showSearchResults = function(query, resultNum) {
 	var results = resultNum + ' results for <strong>' + query;
 	return results;
+};
+var showSearchResults1 = function(query1,resultNum1) {
+	var results1 = resultNum1 + ' results for <strong>' + query1;
+	return results1;
 };
 
 // takes error string and turns it into displayable DOM element
@@ -68,6 +112,7 @@ var getUnanswered = function(tags) {
 	
 	var result = $.ajax({
 		url: "http://api.stackexchange.com/2.2/questions/unanswered",
+		
 		data: request,
 		dataType: "jsonp",
 		type: "GET",
@@ -76,7 +121,6 @@ var getUnanswered = function(tags) {
 		var searchResults = showSearchResults(request.tagged, result.items.length);
 
 		$('.search-results').html(searchResults);
-
 		$.each(result.items, function(i, item) {
 			var question = showQuestion(item);
 			$('.results').append(question);
@@ -85,6 +129,36 @@ var getUnanswered = function(tags) {
 	.fail(function(jqXHR, error, errorThrown){
 		var errorElem = showError(error);
 		$('.search-results').append(errorElem);
+	});
+};
+
+// for the inspiration-getter form 
+var getInspired = function(tags1) {
+
+	//alert('getInspired Function');
+	
+	var result1 = $.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/"+tags1+"/top-answerers/month?site=stackoverflow",
+		//data: request1,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result1){
+		//alert('request Sent');
+
+		var searchResults1 = showSearchResults1(tags1, result1.items.length);
+
+		$('.search-results1').html(searchResults1);
+
+		$.each(result1.items, function(i, item) {
+			var inspiration = showAnswerers(item);
+			$('.results1').append(inspiration);
+
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results1').append(errorElem);
 	});
 };
 
